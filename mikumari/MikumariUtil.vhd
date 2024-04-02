@@ -34,7 +34,8 @@ entity MikumariUtil is
     laccpUp             : in std_logic_vector(kNumMikumari-1 downto 0);
     partnerIpAddr       : in IpAddrArrayType(kNumMikumari-1 downto 0);
     hbcOffset           : in std_logic_vector(kWidthHbCount-1 downto 0);
-    fineOffset          : in std_logic_vector(kWidthLaccpFineOffset-1 downto 0);
+    localFineOffset     : in std_logic_vector(kWidthLaccpFineOffset-1 downto 0);
+    laccpFineOffset     : in std_logic_vector(kWidthLaccpFineOffset-1 downto 0);
     hbfState            : out std_logic;
 
     -- Local bus --
@@ -66,7 +67,8 @@ architecture RTL of MikumariUtil is
   signal reg_laccp_up     : std_logic_vector(kMaxInput-1 downto 0);
   signal reg_ip_addr      : IpAddrArrayType(kMaxInput-1 downto 0);
   signal reg_hbc_offset   : std_logic_vector(kWidthHbCount-1 downto 0);
-  signal reg_fine_offset  : std_logic_vector(kWidthLaccpFineOffset-1 downto 0);
+  signal reg_local_fine_offset  : std_logic_vector(kWidthLaccpFineOffset-1 downto 0);
+  signal reg_laccp_fine_offset  : std_logic_vector(kWidthLaccpFineOffset-1 downto 0);
   signal reg_hbf_state    : std_logic;
 
   signal reg_index        : unsigned(kWidthIndex-1 downto 0);
@@ -101,8 +103,9 @@ begin
 
       end loop;
 
-      reg_hbc_offset   <= hbcOffset;
-      reg_fine_offset  <= fineOffset;
+      reg_hbc_offset        <= hbcOffset;
+      reg_local_fine_offset <= localFineOffset;
+      reg_laccp_fine_offset <= laccpFineOffset;
     end if;
   end process;
 
@@ -240,12 +243,22 @@ begin
                   null;
               end case;
 
-            elsif(addrLocalBus(kNonMultiByte'range) = kFineOffset(kNonMultiByte'range)) then
+            elsif(addrLocalBus(kNonMultiByte'range) = kLocalFineOffset(kNonMultiByte'range)) then
               case addrLocalBus(kMultiByte'range) is
                 when k1stByte =>
-                  dataLocalBusOut   <= reg_fine_offset(7 downto 0);
+                  dataLocalBusOut   <= reg_local_fine_offset(7 downto 0);
                 when k2ndByte =>
-                  dataLocalBusOut   <= reg_fine_offset(15 downto 8);
+                  dataLocalBusOut   <= reg_local_fine_offset(15 downto 8);
+                when others =>
+                  null;
+              end case;
+
+            elsif(addrLocalBus(kNonMultiByte'range) = kLaccpFineOffset(kNonMultiByte'range)) then
+              case addrLocalBus(kMultiByte'range) is
+                when k1stByte =>
+                  dataLocalBusOut   <= reg_laccp_fine_offset(7 downto 0);
+                when k2ndByte =>
+                  dataLocalBusOut   <= reg_laccp_fine_offset(15 downto 8);
                 when others =>
                   null;
               end case;

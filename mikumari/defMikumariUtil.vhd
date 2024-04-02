@@ -32,8 +32,9 @@ package defMikumariUtil is
   constant kLaccpUp               : LocalAddressType := x"060"; -- R,   [31:0],
   constant kPartnerIpAddr         : LocalAddressType := x"070"; -- R,   [31:0],
   constant kHbcOffset             : LocalAddressType := x"080"; -- R,   [15:0],
-  constant kFineOffset            : LocalAddressType := x"090"; -- R,   [15:0],
-  constant kHbfState              : LocalAddressType := x"0A0"; -- W/R  [0:0],
+  constant kLocalFineOffset       : LocalAddressType := x"090"; -- R,   [15:0],
+  constant kLaccpFineOffset       : LocalAddressType := x"0A0"; -- R,   [15:0],
+  constant kHbfState              : LocalAddressType := x"0B0"; -- W/R  [0:0],
 
   constant kRegIndex              : LocalAddressType := x"100"; -- W/R, [5:0], Select w/r channel
 
