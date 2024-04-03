@@ -37,5 +37,6 @@ package defMikumariUtil is
   constant kHbfState              : LocalAddressType := x"0B0"; -- W/R  [0:0],
 
   constant kRegIndex              : LocalAddressType := x"100"; -- W/R, [5:0], Select w/r channel
+  constant kNumLinks              : LocalAddressType := x"200"; -- R,   [5:0], Number of Mikumari links in FW
 
   end package defMikumariUtil;
