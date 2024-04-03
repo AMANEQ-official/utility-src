@@ -72,6 +72,7 @@ architecture RTL of MikumariUtil is
   signal reg_hbf_state    : std_logic;
 
   signal reg_index        : unsigned(kWidthIndex-1 downto 0);
+  signal num_mikumari     : unsigned(7 downto 0);
 
   -- bus process --
   signal state_lbus     : BusProcessType;
@@ -83,7 +84,8 @@ begin
   --                                 body
   -- ======================================================================
 
-  hbfState  <= reg_hbf_state;
+  hbfState      <= reg_hbf_state;
+  num_mikumari  <= to_unsigned(kNumMikumari, num_mikumari'length);
 
   u_buf : process(clk)
   begin
@@ -268,6 +270,9 @@ begin
 
             elsif(addrLocalBus(kNonMultiByte'range) = kRegIndex(kNonMultiByte'range)) then
               dataLocalBusOut <= (reg_index'range => std_logic_vector(reg_index), others => '0');
+
+            elsif(addrLocalBus(kNonMultiByte'range) = kNumLinks(kNonMultiByte'range)) then
+              dataLocalBusOut <= std_logic_vector(num_mikumari);
 
             else
               null;
