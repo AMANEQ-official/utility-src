@@ -20,6 +20,7 @@ entity FreeRunScaler is
     hbCount             : in std_logic_vector(kWidthCnt-1 downto 0);
     hbfNum              : in std_logic_vector(kWidthCnt-1 downto 0);
     scrEnIn             : in std_logic_vector(kNumSysInput+kNumHitInput-1 downto 0);
+    scrRstOut           : out std_logic;
 
     -- Local bus --
     addrLocalBus        : in LocalAddressType;
@@ -80,7 +81,7 @@ architecture RTL of FreeRunScaler is
   -- Local bus --
   signal reg_latch_scr      : std_logic;
   signal reg_busy           : std_logic;
-  signal reg_cnt_reset      : std_logic;
+  signal reg_cnt_reset      : std_logic_vector(kIndexGolobalRst downto kIndexLocalRst);
 
   -- Local bus --
   type SCRBusProcessType is (
@@ -109,7 +110,8 @@ architecture RTL of FreeRunScaler is
 -- =============================== body ===============================
 begin
 
-  reset_cnt <= cntRst or reg_cnt_reset;
+  scrRstOut <= reg_cnt_reset(kIndexGolobalRst);
+  reset_cnt <= cntRst or reg_cnt_reset(kIndexLocalRst);
 
   -- External information ----------------------------------------------------------
   u_exinfo : process(clk)
@@ -208,7 +210,7 @@ begin
   begin
     if(clk'event and clk = '1') then
       if(sync_reset = '1') then
-        reg_cnt_reset <= '0';
+        reg_cnt_reset <= (others => '0');
         reg_latch_scr <= '0';
 
         state_lbus	<= Init;
@@ -235,7 +237,7 @@ begin
           when Write =>
             case addrLocalBus(kNonMultiByte'range) is
               when kCntReset(kNonMultiByte'range) =>
-                reg_cnt_reset	<= '1';
+                reg_cnt_reset	<= dataLocalBusIn(kIndexGolobalRst downto kIndexLocalRst);
               when others => null;
             end case;
             state_lbus	<= Finalize;
@@ -278,7 +280,7 @@ begin
             end if;
 
           when Finalize =>
-            reg_cnt_reset <= '0';
+            reg_cnt_reset <= (others => '0');
             reg_latch_scr <= '0';
             state_lbus    <= Done;
 
