@@ -29,7 +29,9 @@ package defFreeRunScaler is
   function swap_vect(vect_in : in std_logic_vector) return std_logic_vector;
 
   -- Local Address  -------------------------------------------------------
-  constant kCntReset              : LocalAddressType := x"000"; -- W, [0:0], assert counter reset
+  constant kCntReset              : LocalAddressType := x"000"; -- W, [1:0], assert counter reset
+  constant kIndexLocalRst         : integer:= 0;
+  constant kIndexGolobalRst       : integer:= 1;
   constant kLatchSrc              : LocalAddressType := x"010"; -- R, [0:0], read busy state and assert latch_scr signal
   constant kNumCh                 : LocalAddressType := x"020"; -- R, [7:0], # of scaler channel
   constant kReadFIFO              : LocalAddressType := x"100"; -- R, [7:0], Read FIFO data
