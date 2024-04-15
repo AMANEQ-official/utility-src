@@ -26,6 +26,7 @@ entity MikumariUtil is
     bitslipNumIn        : in BitslipArrayType(kNumMikumari-1 downto 0);
     cbtInitOut          : out std_logic_vector(kNumMikumari-1 downto 0);
     tapValueOut         : out TapArrayType(kNumMikumari-1 downto 0);
+    rstOverMikuOut      : out std_logic_vector(kNumMikumari-1 downto 0);
 
     -- MIKUMARI Link ports --
     mikuLinkUp          : in std_logic_vector(kNumMikumari-1 downto 0);
@@ -61,6 +62,7 @@ architecture RTL of MikumariUtil is
   signal reg_tap_out      : TapArrayType(kNumMikumari-1 downto 0);
   signal reg_bitslip_in   : BitslipArrayType(kNumMikumari-1 downto 0);
   signal reg_cbt_init     : std_logic_vector(kMaxInput-1 downto 0);
+  signal reg_rst_over_miku : std_logic_vector(kMaxInput-1 downto 0);
 
   signal reg_mikumari_up  : std_logic_vector(kMaxInput-1 downto 0);
 
@@ -103,6 +105,8 @@ begin
         cbtInitOut(i)       <= reg_cbt_init(i);
         tapValueOut(i)      <= reg_tap_out(i);
 
+        rstOverMikuOut(i)   <= reg_rst_over_miku(i);
+
       end loop;
 
       reg_hbc_offset        <= hbcOffset;
@@ -116,10 +120,11 @@ begin
   begin
     if(clk'event and clk = '1') then
       if(sync_reset = '1') then
-        reg_tap_out   <= (others => (others => '0'));
-        reg_cbt_init  <= (others => '0');
-        reg_hbf_state <= '0';
-        reg_index     <= (others => '0');
+        reg_tap_out       <= (others => (others => '0'));
+        reg_cbt_init      <= (others => '0');
+        reg_hbf_state     <= '0';
+        reg_index         <= (others => '0');
+        reg_rst_over_miku <= (others => '0');
 
         state_lbus        <= Init;
       else
@@ -130,6 +135,8 @@ begin
             state_lbus          <= Idle;
 
           when Idle =>
+            reg_rst_over_miku <= (others => '0');
+
             readyLocalBus    <= '0';
             if(weLocalBus = '1' or reLocalBus = '1') then
               state_lbus    <= Connect;
@@ -162,6 +169,20 @@ begin
 
             elsif(addrLocalBus(kNonMultiByte'range) = kHbfState(kNonMultiByte'range)) then
               reg_hbf_state  <= dataLocalBusIn(0);
+
+            elsif(addrLocalBus(kNonMultiByte'range) = kRstOverMiku(kNonMultiByte'range)) then
+              case addrLocalBus(kMultiByte'range) is
+                when k1stByte =>
+                  reg_rst_over_miku(7 downto 0)    <= dataLocalBusIn;
+                when k2ndByte =>
+                  reg_rst_over_miku(15 downto 8)   <= dataLocalBusIn;
+                when k3rdByte =>
+                  reg_rst_over_miku(23 downto 16)  <= dataLocalBusIn;
+                when k4thByte =>
+                  reg_rst_over_miku(31 downto 24)  <= dataLocalBusIn;
+                when others =>
+                  null;
+              end case;
 
             elsif(addrLocalBus(kNonMultiByte'range) = kRegIndex(kNonMultiByte'range)) then
               reg_index <= unsigned(dataLocalBusIn(kWidthIndex-1 downto 0));

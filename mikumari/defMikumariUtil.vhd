@@ -36,6 +36,8 @@ package defMikumariUtil is
   constant kLaccpFineOffset       : LocalAddressType := x"0A0"; -- R,   [15:0],
   constant kHbfState              : LocalAddressType := x"0B0"; -- W/R  [0:0],
 
+  constant kRstOverMiku           : LocalAddressType := x"0C0"; -- W,   [31:0],
+
   constant kRegIndex              : LocalAddressType := x"100"; -- W/R, [5:0], Select w/r channel
   constant kNumLinks              : LocalAddressType := x"200"; -- R,   [5:0], Number of Mikumari links in FW
 
