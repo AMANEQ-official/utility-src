@@ -32,8 +32,11 @@ package defFreeRunScaler is
   constant kCntReset              : LocalAddressType := x"000"; -- W, [1:0], assert counter reset
   constant kIndexLocalRst         : integer:= 0;
   constant kIndexGolobalRst       : integer:= 1;
+  constant kIndexFifoRst          : integer:= 2;
   constant kLatchSrc              : LocalAddressType := x"010"; -- R, [0:0], read busy state and assert latch_scr signal
   constant kNumCh                 : LocalAddressType := x"020"; -- R, [7:0], # of scaler channel
+  constant kStatus                : LocalAddressType := x"030"; -- R, [7:0], status register
+  constant kIndexFifoEmpty        : integer:= 0;
   constant kReadFIFO              : LocalAddressType := x"100"; -- R, [7:0], Read FIFO data
 
 end package defFreeRunScaler;
