@@ -81,7 +81,8 @@ architecture RTL of FreeRunScaler is
   -- Local bus --
   signal reg_latch_scr      : std_logic;
   signal reg_busy           : std_logic;
-  signal reg_cnt_reset      : std_logic_vector(kIndexGolobalRst downto kIndexLocalRst);
+  signal reg_cnt_reset      : std_logic_vector(kIndexFifoRst downto kIndexLocalRst);
+  signal reg_status         : std_logic_vector(7 downto 0);
 
   -- Local bus --
   type SCRBusProcessType is (
@@ -204,6 +205,7 @@ begin
       rd_rst_busy => open
     );
 
+  reg_status  <= (kIndexFifoEmpty => empty_fifo, others => '0');
 
   -- Bus process ------------------------------------------------------------------
   u_BusProcess : process(clk)
@@ -237,7 +239,7 @@ begin
           when Write =>
             case addrLocalBus(kNonMultiByte'range) is
               when kCntReset(kNonMultiByte'range) =>
-                reg_cnt_reset	<= dataLocalBusIn(kIndexGolobalRst downto kIndexLocalRst);
+                reg_cnt_reset	<= dataLocalBusIn(kIndexFifoRst downto kIndexLocalRst);
               when others => null;
             end case;
             state_lbus	<= Finalize;
@@ -256,6 +258,10 @@ begin
 
               when kNumCh(kNonMultiByte'range) =>
                 dataLocalBusOut <= std_logic_vector(to_unsigned(kNumScrBlock, 8));
+                state_lbus	    <= Finalize;
+
+              when kStatus(kNonMultiByte'range) =>
+                dataLocalBusOut <= reg_status;
                 state_lbus	    <= Finalize;
 
               when kReadFIFO(kNonMultiByte'range) =>
@@ -300,7 +306,7 @@ begin
 
   -- Reset sequence --
   u_reset_gen   : entity mylib.ResetGen
-    port map(rst, clk, sync_reset);
+    port map(rst or reg_cnt_reset(kIndexFifoRst), clk, sync_reset);
 
   u_reset_gen_cnt   : entity mylib.ResetGen
     port map(reset_cnt, clk, cnt_sync_reset);
