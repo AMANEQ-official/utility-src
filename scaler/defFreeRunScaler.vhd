@@ -9,7 +9,7 @@ package defFreeRunScaler is
   constant kNumExtInfo            : integer:= 2;
 
   -- Systerm information --
-  constant kNumSysInput           : integer:= 8;
+  constant kNumSysInput           : integer:= 16;
 
   constant kIndexRealTime         : integer:= 0;
   constant kIndexDaqRunTime       : integer:= 1;
@@ -19,6 +19,9 @@ package defFreeRunScaler is
   constant kIndexOutThrotTime     : integer:= 5;
   constant kIndexHbfThrotTime     : integer:= 6;
   constant kIndexMikuError        : integer:= 7;
+  constant kIndexTrgReq           : integer:= 8;
+  constant kIndexTrgRejected      : integer:= 9;
+  -- 10-15 : Reserved
 
   -- Structure --
   -- Heartbeat count        (1)
