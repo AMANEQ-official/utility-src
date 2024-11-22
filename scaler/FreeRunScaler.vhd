@@ -22,6 +22,8 @@ entity FreeRunScaler is
     scrEnIn             : in std_logic_vector(kNumSysInput+kNumHitInput-1 downto 0);
     scrRstOut           : out std_logic;
 
+    scrGates            : in std_logic_vector(kNumScrGate-1 downto 0);
+
     -- Local bus --
     addrLocalBus        : in LocalAddressType;
     dataLocalBusIn      : in LocalBusInType;
@@ -43,12 +45,28 @@ architecture RTL of FreeRunScaler is
   -- internal signal declaration ----------------------------------------
   constant kNumScrBlock       : integer:= kNumExtInfo+kNumSysInput+kNumHitInput;
   constant kNumScrChannel     : integer:= kNumSysInput+kNumHitInput;
+  constant kNumScr            : integer:= kNumSysInput+kNumScrGate*kNumHitInput;
 
+  signal reg_header           : std_logic_vector(kWidthCnt-1 downto 0);
   signal reg_hb_count         : std_logic_vector(kWidthCnt-1 downto 0);
   signal reg_hbf              : std_logic_vector(kWidthCnt-1 downto 0);
 
-  type kCntType is array (kNumScrChannel-1 downto 0) of std_logic_vector(kWidthCnt-1 downto 0);
-  signal scr_counter, reg_scr_counter : kCntType;
+  type kCntType     is array (kNumScr-1 downto 0) of std_logic_vector(kWidthCnt-1 downto 0);
+  type kCntReadType is array (kNumScrChannel-1 downto 0) of std_logic_vector(kWidthCnt-1 downto 0);
+  signal scr_counter : kCntType;
+  signal reg_scr_counter : kCntReadType;
+
+  function GetOffset(reg_latch_scr : std_logic_vector) return integer is
+    variable offset   : integer:= 0;
+  begin
+    case reg_latch_scr is
+      when "001" => offset   := 0;
+      when "010" => offset   := kNumHitInput;
+      when "100" => offset   := 2*kNumHitInput;
+      when others => offset   := 0;
+    end case;
+    return offset;
+  end function;
 
   signal din_fifo             : std_logic_vector(kWidthCnt-1 downto 0);
   signal dout_fifo            : std_logic_vector(7 downto 0);
@@ -79,7 +97,7 @@ architecture RTL of FreeRunScaler is
   signal state_fill         : SCRFillProcessType;
 
   -- Local bus --
-  signal reg_latch_scr      : std_logic;
+  signal reg_latch_scr      : std_logic_vector(kNumScrGate-1 downto 0);
   signal reg_busy           : std_logic;
   signal reg_cnt_reset      : std_logic_vector(kIndexFifoRst downto kIndexLocalRst);
   signal reg_status         : std_logic_vector(7 downto 0);
@@ -108,6 +126,9 @@ architecture RTL of FreeRunScaler is
   --attribute mark_debug of   scr_counter     : signal is enDebug;
   --attribute mark_debug of   reg_scr_counter : signal is enDebug;
 
+  attribute use_dsp : string;
+  attribute use_dsp of scr_counter  : signal is "no";
+
 -- =============================== body ===============================
 begin
 
@@ -118,7 +139,7 @@ begin
   u_exinfo : process(clk)
   begin
     if(clk'event and clk = '1') then
-      if(reg_latch_scr = '1') then
+      if(unsigned(reg_latch_scr) /= 0) then
         reg_hb_count  <= hbCount;
         reg_hbf       <= hbfNum;
       end if;
@@ -126,18 +147,66 @@ begin
   end process;
 
   -- Scaler instance ---------------------------------------------------------------
-  gen_scr : for i in 0 to kNumScrChannel-1 generate
+  gen_scr0 : for i in 0 to kNumSysInput-1 generate
+
+  begin
     process(clk)
     begin
       if(clk'event and clk = '1') then
         if(cnt_sync_reset = '1') then
           scr_counter(i)  <= (others => '0');
         else
-          if(reg_latch_scr = '1') then
-            reg_scr_counter(i)  <= scr_counter(i);
-          elsif(scrEnIn(i) = '1') then
+          if(scrEnIn(i) = '1') then
             scr_counter(i)  <= std_logic_vector(unsigned(scr_counter(i)) +1);
           end if;
+        end if;
+      end if;
+    end process;
+
+    process(clk)
+    begin
+      if(clk'event and clk = '1') then
+        if(unsigned(reg_latch_scr) /= 0) then
+          reg_scr_counter(i)  <= scr_counter(i);
+        end if;
+      end if;
+    end process;
+  end generate;
+
+  gen_scr1 : for i in kNumSysInput to kNumScrChannel-1 generate
+
+  begin
+    process(clk)
+    begin
+      if(cnt_sync_reset = '1') then
+        scr_counter(i)                  <= (others => '0');
+        scr_counter(i+kNumHitInput)     <= (others => '0');
+        scr_counter(i+2*kNumHitInput)   <= (others => '0');
+--        scr_counter(i+3*kNumHitInput)   <= (others => '0');
+      elsif(clk'event and clk = '1') then
+        if(scrEnIn(i) = '1' and scrGates(0) = '1') then
+          scr_counter(i)  <= std_logic_vector(unsigned(scr_counter(i)) +1);
+        end if;
+
+        if(scrEnIn(i) = '1' and scrGates(1) = '1') then
+          scr_counter(i+kNumHitInput)  <= std_logic_vector(unsigned(scr_counter(i+kNumHitInput)) +1);
+        end if;
+
+        if(scrEnIn(i) = '1' and scrGates(2) = '1') then
+          scr_counter(i+2*kNumHitInput)  <= std_logic_vector(unsigned(scr_counter(i+2*kNumHitInput)) +1);
+        end if;
+
+--        if(scrEnIn(i) = '1' and scrGates(3) = '1') then
+--          scr_counter(i+3*kNumHitInput)  <= std_logic_vector(unsigned(scr_counter(i+3*kNumHitInput)) +1);
+--        end if;
+      end if;
+    end process;
+
+    process(clk)
+    begin
+      if(clk'event and clk = '1') then
+        if(unsigned(reg_latch_scr) /= 0) then
+          reg_scr_counter(i)  <= scr_counter(i + GetOffset(reg_latch_scr));
         end if;
       end if;
     end process;
@@ -154,11 +223,17 @@ begin
         case state_fill is
           when Idle =>
             we_fifo   <= '0';
-            if(reg_latch_scr = '1') then
+            if(unsigned(reg_latch_scr) /= 0) then
               reg_busy    <= '1';
+              --reg_header  <= X"FF04000" & "00" & reg_latch_scr(2 downto 1);
               index       := kNumScrChannel-1;
               state_fill  <= FillHbc;
             end if;
+
+--          when FillHeader =>
+--            we_fifo     <= '1';
+--            din_fifo    <= reg_header(7 downto 0) & reg_header(15 downto 8) & reg_header(23 downto 16) & reg_header(31 downto 24);
+--            state_fill  <= FillHbc;
 
           when FillHbc =>
             we_fifo     <= '1';
@@ -213,7 +288,7 @@ begin
     if(clk'event and clk = '1') then
       if(sync_reset = '1') then
         reg_cnt_reset <= (others => '0');
-        reg_latch_scr <= '0';
+        reg_latch_scr <= (others => '0');
 
         state_lbus	<= Init;
       else
@@ -248,10 +323,19 @@ begin
             case addrLocalBus(kNonMultiByte'range) is
               when kLatchSrc(kNonMultiByte'range) =>
                 if(reg_busy = '1') then
-                  reg_latch_scr   <= '0';
+                  reg_latch_scr   <= (others => '0');
                   dataLocalBusOut <= "00000000";
                 else
-                  reg_latch_scr   <= '1';
+                  if(addrLocalBus(kMultiByte'range) = k1stByte) then
+                    reg_latch_scr   <= "001";
+                  elsif(addrLocalBus(kMultiByte'range) = k2ndByte) then
+                    reg_latch_scr   <= "010";
+                  elsif(addrLocalBus(kMultiByte'range) = k3rdByte) then
+                    reg_latch_scr   <= "100";
+                  else
+                    reg_latch_scr   <= "001";
+                  end if;
+
                   dataLocalBusOut <= "00000001";
                 end if;
                 state_lbus	<= Finalize;
@@ -287,7 +371,7 @@ begin
 
           when Finalize =>
             reg_cnt_reset <= (others => '0');
-            reg_latch_scr <= '0';
+            reg_latch_scr <= (others => '0');
             state_lbus    <= Done;
 
           when Done =>

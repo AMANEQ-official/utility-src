@@ -4,6 +4,7 @@ use mylib.defBCT.all;
 
 package defFreeRunScaler is
   constant kWidthCnt              : integer:= 32;
+  constant kNumScrGate            : integer:= 3;
 
   -- External information --
   constant kNumExtInfo            : integer:= 2;
@@ -21,9 +22,12 @@ package defFreeRunScaler is
   constant kIndexMikuError        : integer:= 7;
   constant kIndexTrgReq           : integer:= 8;
   constant kIndexTrgRejected      : integer:= 9;
-  -- 10-15 : Reserved
+  constant kIndexGate1Time        : integer:= 10;
+  constant kIndexGate2Time        : integer:= 11;
+  -- 12-15 : Reserved
 
   -- Structure --
+  -- Header                 (1)
   -- Heartbeat count        (1)
   -- Heartbeat frame number (1)
   -- System input           (8)
