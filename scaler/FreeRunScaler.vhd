@@ -147,17 +147,17 @@ begin
   end process;
 
   -- Scaler instance ---------------------------------------------------------------
-  gen_scr0 : for i in 0 to kNumSysInput-1 generate
+  gen_scr0 : for i in kNumHitInput to kNumHitInput+kNumSysInput-1 generate
 
   begin
     process(clk)
     begin
       if(clk'event and clk = '1') then
         if(cnt_sync_reset = '1') then
-          scr_counter(i)  <= (others => '0');
+          scr_counter(i+2*kNumHitInput)  <= (others => '0');
         else
           if(scrEnIn(i) = '1') then
-            scr_counter(i)  <= std_logic_vector(unsigned(scr_counter(i)) +1);
+            scr_counter(i+2*kNumHitInput)  <= std_logic_vector(unsigned(scr_counter(i+2*kNumHitInput)) +1);
           end if;
         end if;
       end if;
@@ -167,13 +167,14 @@ begin
     begin
       if(clk'event and clk = '1') then
         if(unsigned(reg_latch_scr) /= 0) then
-          reg_scr_counter(i)  <= scr_counter(i);
+          reg_scr_counter(i)  <= scr_counter(i+2*kNumHitInput);
         end if;
       end if;
     end process;
   end generate;
 
-  gen_scr1 : for i in kNumSysInput to kNumScrChannel-1 generate
+  --gen_scr1 : for i in kNumSysInput to kNumScrChannel-1 generate
+  gen_scr1 : for i in 0 to kNumHitInput-1 generate
 
   begin
     process(clk)
