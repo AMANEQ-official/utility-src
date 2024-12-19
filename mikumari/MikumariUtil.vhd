@@ -20,6 +20,8 @@ entity MikumariUtil is
     rst               : in std_logic;
     clk               : in std_logic;
 
+    clockRootMode     : in std_logic;
+
     -- CBT status ports --
     cbtLaneUp           : in std_logic_vector(kNumMikumari-1 downto 0);
     tapValueIn          : in TapArrayType(kNumMikumari-1 downto 0);
@@ -57,6 +59,8 @@ architecture RTL of MikumariUtil is
 
   -- Internal signal declaration ---------------------------------
   constant kMaxInput      : integer:= 32;
+  signal reg_clock_root   : std_logic;
+
   signal reg_cbt_lane_up  : std_logic_vector(kMaxInput-1 downto 0);
   signal reg_tap_in       : TapArrayType(kNumMikumari-1 downto 0);
   signal reg_tap_out      : TapArrayType(kNumMikumari-1 downto 0);
@@ -93,6 +97,8 @@ begin
   begin
     if(clk'event and clk = '1') then
       for i in 0 to kNumMikumari-1 loop
+        reg_clock_root      <= clockRootMode;
+
         reg_cbt_lane_up(i)  <= cbtLaneUp(i);
         reg_tap_in(i)       <= tapValueIn(i);
         reg_bitslip_in(i)   <= bitslipNumIn(i);
@@ -294,6 +300,9 @@ begin
 
             elsif(addrLocalBus(kNonMultiByte'range) = kNumLinks(kNonMultiByte'range)) then
               dataLocalBusOut <= std_logic_vector(num_mikumari);
+
+            elsif(addrLocalBus(kNonMultiByte'range) = kClockRootMode(kNonMultiByte'range)) then
+              dataLocalBusOut <= (0 => reg_clock_root, others => '0');
 
             else
               null;
