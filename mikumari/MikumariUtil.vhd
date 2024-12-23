@@ -13,6 +13,7 @@ use mylib.defHeartBeatUnit.all;
 entity MikumariUtil is
   generic(
     kNumMikumari  : integer:= 16;
+    kSecondaryId  : integer:= 0;
     enDEBUG       : boolean:= false
   );
   port(
@@ -100,13 +101,22 @@ begin
         reg_clock_root      <= clockRootMode;
 
         reg_cbt_lane_up(i)  <= cbtLaneUp(i);
-        reg_tap_in(i)       <= tapValueIn(i);
-        reg_bitslip_in(i)   <= bitslipNumIn(i);
+        if(cbtLaneUp(i) = '1') then
+          reg_tap_in(i)       <= tapValueIn(i);
+          reg_bitslip_in(i)   <= bitslipNumIn(i);
+        else
+          reg_tap_in(i)       <= (others => '0');
+          reg_bitslip_in(i)   <= (others => '0');
+        end if;
 
         reg_mikumari_up(i)  <= mikuLinkUp(i);
 
         reg_laccp_up(i)     <= laccpUp(i);
-        reg_ip_addr(i)      <= partnerIpAddr(i);
+        if(laccpUp(i) = '1') then
+          reg_ip_addr(i)      <= partnerIpAddr(i);
+        else
+          reg_ip_addr(i)      <= (others => '0');
+        end if;
 
         cbtInitOut(i)       <= reg_cbt_init(i);
         tapValueOut(i)      <= reg_tap_out(i);
@@ -115,9 +125,15 @@ begin
 
       end loop;
 
-      reg_hbc_offset        <= hbcOffset;
-      reg_local_fine_offset <= localFineOffset;
-      reg_laccp_fine_offset <= laccpFineOffset;
+      if(laccpUp(kSecondaryId) = '1') then
+        reg_hbc_offset        <= hbcOffset;
+        reg_local_fine_offset <= localFineOffset;
+        reg_laccp_fine_offset <= laccpFineOffset;
+      else
+        reg_hbc_offset        <= (others => '0');
+        reg_local_fine_offset <= (others => '0');
+        reg_laccp_fine_offset <= (others => '0');
+      end if;
     end if;
   end process;
 
