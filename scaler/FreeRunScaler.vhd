@@ -127,7 +127,7 @@ architecture RTL of FreeRunScaler is
   --attribute mark_debug of   reg_scr_counter : signal is enDebug;
 
   attribute use_dsp : string;
-  attribute use_dsp of scr_counter  : signal is "no";
+  attribute use_dsp of scr_counter  : signal is "yes";
 
 -- =============================== body ===============================
 begin
