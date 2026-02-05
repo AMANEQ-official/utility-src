@@ -4,8 +4,8 @@ use ieee.numeric_std.all;
 
 use mylib.defBCT.all;
 use mylib.defCDCM.all;
-use mylib.defHeartBeatUnit.all;
-use mylib.defLACCP.all;
+--use mylib.defHeartBeatUnit.all;
+--use mylib.defLACCP.all;
 
 package defMikumariUtil is
 

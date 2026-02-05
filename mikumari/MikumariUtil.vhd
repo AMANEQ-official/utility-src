@@ -7,13 +7,15 @@ use ieee.numeric_std.all;
 library mylib;
 use mylib.defBCT.all;
 use mylib.defMikumariUtil.all;
-use mylib.defLaccp.all;
-use mylib.defHeartBeatUnit.all;
+--use mylib.defLaccp.all;
+--use mylib.defHeartBeatUnit.all;
 
 entity MikumariUtil is
   generic(
     kNumMikumari  : integer:= 16;
     kSecondaryId  : integer:= 0;
+    kWidthHbCount : integer;
+    kWidthLaccpFineOffset : integer;
     enDEBUG       : boolean:= false
   );
   port(
